@@ -31,7 +31,7 @@ jobs:
     - name: Upload artifact todo windows
       uses: actions/upload-artifact@v4
       with:
-        name: todos_artifacts
+        name: ${{ github.ref_name }}
         path: |
           out/bin/cmd/todos_windows.exe
           out/bin/cmd/todos_linux
@@ -43,15 +43,11 @@ jobs:
     - name: Download todos artifacts
       uses: actions/download-artifact@v4
       with:
-        name: todos_artifacts
+        name: ${{ github.ref_name }}
 
     - name: Upload windows
-      uses: vesoft-inc/upload-assets@v1.0.0
+      uses: jaywcjlove/github-action-upload-assets@v1.1.1
       with:
-        asset-path: "todos_windows.exe"
-
-    - name: Upload Linux
-      uses: vesoft-inc/upload-assets@v1.0.0
-      with:
-        asset-path: "todos_linux"
+        tag: ${{ github.event.release.tag_name }} 
+        asset-path: '["./todos*"]'
         
