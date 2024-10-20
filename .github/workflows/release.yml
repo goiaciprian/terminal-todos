@@ -28,13 +28,30 @@ jobs:
         go build -ldflags "-X terminal-todos/cmd/commands.Version=$VERSION" -o out/bin/cmd/todos_windows.exe ./cmd
         go build -ldflags "-X terminal-todos/cmd/commands.Version=$VERSION" -o out/bin/cmd/todos_linux ./cmd
 
+    - name: Upload artifact todo windows
+      uses: actions/upload-artifact@v4
+      with:
+        name: todos_artifacts
+        path: |
+          out/bin/cmd/todos_windows.exe
+          out/bin/cmd/todos_linux
+  
+  upload:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - name: Download todos artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: todos_artifacts
+
     - name: Upload windows
       uses: vesoft-inc/upload-assets@v1.0.0
       with:
-        asset-path: "./out/bin/cmd/todos_windows.exe"
+        asset-path: "todos_windows.exe"
 
     - name: Upload Linux
       uses: vesoft-inc/upload-assets@v1.0.0
       with:
-        asset-path: "./out/bin/cmd/todos_linux"
+        asset-path: "todos_linux"
         
