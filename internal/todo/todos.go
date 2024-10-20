@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"strconv"
+	"terminal-todos/internal/config"
 	"terminal-todos/internal/database"
 	"time"
 
@@ -16,7 +17,7 @@ var queries database.Queries
 var db *sql.DB
 
 func init() {
-	_db, err := database.Open()
+	_db, err := database.Open(config.Instance.DATABASE_FILE_PATH)
 	if err != nil {
 		return
 	}

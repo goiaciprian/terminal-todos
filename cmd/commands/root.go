@@ -7,10 +7,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var Version = "dev-build"
+
 var rootCmd = &cobra.Command{
 	Use:   "todos",
 	Short: "todos - local cli todos app",
 	Long:  "todos is suppose to help you add todos from you're terminal",
+	Version: Version,
 }
 
 func Execute() {
