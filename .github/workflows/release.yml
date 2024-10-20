@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  release:
+    types:
+      - edited
+      - released
+      - prereleased
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - id: get_version
+      name: Get tag version
+      uses: jannemattila/get-version-from-tag@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+          go-version-file: "go.mod"
+
+    - name: Build
+      run: |
+        VERSION=$(echo "${{ steps.get_version.outputs.version }}")
+        go build -ldflags "-X terminal-todos/cmd/commands.Version=$VERSION" -o out/bin/cmd/todos_windows.exe ./cmd
+        go build -ldflags "-X terminal-todos/cmd/commands.Version=$VERSION" -o out/bin/cmd/todos_linux ./cmd
+
+    - name: Upload windows
+      uses: vesoft-inc/upload-assets@v1.0.0
+      with:
+        asset-path: "./out/bin/cmd/todos_windows.exe"
+
+    - name: Upload Linux
+      uses: vesoft-inc/upload-assets@v1.0.0
+      with:
+        asset-path: "./out/bin/cmd/todos_linux"
+        
