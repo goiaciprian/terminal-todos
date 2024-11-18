@@ -1,6 +1,9 @@
 -- name: GetTodos :many
 select * from todos;
 
+-- name: CountTodos :one
+select count(*) from todos;
+
 -- name: GetTodosById :one
 select * from todos where id = ?;
 

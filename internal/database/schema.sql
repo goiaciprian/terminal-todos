@@ -1,4 +1,4 @@
-create table todos(
+create table if not exists todos(
 	id integer primary key autoincrement not null,
 	title text not null,
 	description text,

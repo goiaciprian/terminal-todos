@@ -32,6 +32,17 @@ func (q *Queries) CompleteTodo(ctx context.Context, id int64) (Todo, error) {
 	return i, err
 }
 
+const countTodos = `-- name: CountTodos :one
+select count(*) from todos
+`
+
+func (q *Queries) CountTodos(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countTodos)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createTodo = `-- name: CreateTodo :one
 insert into todos (title, description)
 values (?, ?)

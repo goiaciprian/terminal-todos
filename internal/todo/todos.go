@@ -26,6 +26,12 @@ func init() {
 	queries = *database.New(db)
 }
 
+func Count() (int64, error) {
+	defer db.Close()
+	ctx := context.Background()
+	return queries.CountTodos(ctx)
+}
+
 func GetAll() ([]database.Todo, error) {
 	defer db.Close()
 	ctx := context.Background()
