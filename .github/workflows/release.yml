@@ -1,6 +1,11 @@
 name: Release
 
 on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        required: true
+        description: 'Tag value that will be used to set the version and also to be uploaded to the correct asset'
   release:
     types:
       - edited
@@ -14,6 +19,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - id: get_version
+      if: "${{ github.event.inputs.tag == '' }}"
       name: Get tag version
       uses: jannemattila/get-version-from-tag@v3
 
@@ -22,9 +28,16 @@ jobs:
       with:
           go-version-file: "go.mod"
 
-    - name: Build
+    - name: Build from release
+      if: "${{ github.event.inputs.tag == '' }}"
       run: |
         $VERSION="${{ steps.get_version.outputs.version }}"
+        go build -ldflags "-X terminal-todos/cmd/commands.Version=$VERSION" -o out/bin/cmd/todos_windows.exe ./cmd
+
+    - name: Build from dispatch
+      if: "${{ github.event.inputs.tag != '' }}"
+      run: |
+        $VERSION="${{ github.event.inputs.tag }}"
         go build -ldflags "-X terminal-todos/cmd/commands.Version=$VERSION" -o out/bin/cmd/todos_windows.exe ./cmd
 
     - name: Upload artifact todo windows
