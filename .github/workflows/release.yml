@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
 
@@ -26,7 +26,7 @@ jobs:
       run: |
         VERSION=$(echo "${{ steps.get_version.outputs.version }}")
         go build -ldflags "-X terminal-todos/cmd/commands.Version=$VERSION" -o out/bin/cmd/todos_windows.exe ./cmd
-        go build -ldflags "-X terminal-todos/cmd/commands.Version=$VERSION" -o out/bin/cmd/todos_linux ./cmd
+        # go build -ldflags "-X terminal-todos/cmd/commands.Version=$VERSION" -o out/bin/cmd/todos_linux ./cmd
 
     - name: Upload artifact todo windows
       uses: actions/upload-artifact@v4
