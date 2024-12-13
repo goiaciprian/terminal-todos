@@ -1,4 +1,6 @@
 # Terminal Todos 
+[![Release](https://github.com/goiaciprian/terminal-todos/actions/workflows/release.yml/badge.svg)](https://github.com/goiaciprian/terminal-todos/actions/workflows/release.yml)
+
 This is a small todo project for terminal
 
 ## Instalation
