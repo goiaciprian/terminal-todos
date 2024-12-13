@@ -3,18 +3,18 @@ package config
 import (
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 
+	"terminal-todos/internal"
 	"terminal-todos/internal/database"
-
-	"github.com/golang-migrate/migrate"
-	"github.com/golang-migrate/migrate/database/sqlite3"
-	"github.com/golang-migrate/migrate/source/file"
 )
 
 type ConfigStruct struct {
 	MAIN_FOLDER_PATH   string
 	DATABASE_FILE_PATH string
+	ICON_PATH          string
 }
 
 var Instance *ConfigStruct
@@ -30,11 +30,11 @@ func init() {
 	Instance = &ConfigStruct{
 		MAIN_FOLDER_PATH:   folderPath,
 		DATABASE_FILE_PATH: folderPath + "\\sql.db",
+		ICON_PATH:          folderPath + "\\icon.png",
 	}
 }
 
-func FirstTimeSetup(migrationFolder string) {
-	fmt.Println(Instance)
+func FirstTimeSetup() {
 	if _, err := os.Stat(Instance.DATABASE_FILE_PATH); errors.Is(err, os.ErrNotExist) {
 
 		err := os.MkdirAll(Instance.MAIN_FOLDER_PATH, 0750)
@@ -52,6 +52,26 @@ func FirstTimeSetup(migrationFolder string) {
 		}
 		fmt.Println("Database file created")
 
+		resp, err := http.Get(internal.ICON_URL)
+		if err != nil {
+			fmt.Println("Image request error")
+			panic(err)
+		}
+		defer resp.Body.Close();
+
+		icon, err := os.Create(Instance.ICON_PATH)
+		if err != nil {
+			fmt.Println("Icon file create error")
+			panic(err)
+		}
+
+		_, err = io.Copy(icon, resp.Body)
+		if err != nil {
+			fmt.Println("Copy icon error")
+			panic(err)
+		}
+
+		defer icon.Close()
 		defer f.Close()
 	} else {
 		fmt.Println("Database file already created")
@@ -59,36 +79,31 @@ func FirstTimeSetup(migrationFolder string) {
 
 	db, err := database.Open(Instance.DATABASE_FILE_PATH)
 	if err != nil {
-		return
-	}
-
-	dbDriver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
-	if err != nil {
-		errMessage := fmt.Sprintf("Migration runner error1 %s", err)
+		errMessage := fmt.Sprintf("Database open error %s", err)
 		panic(errMessage)
 	}
 
-	fileSource, err := (&file.File{}).Open(migrationFolder)
+	schemaResponse, err := http.Get(internal.SCHEMA_URL)
 	if err != nil {
-		errMessage := fmt.Sprintf("Migration runner error2 %s", err)
+		errMessage := fmt.Sprintf("Schema request file %s", err)
 		panic(errMessage)
 	}
 
-	migrater, err := migrate.NewWithInstance("file", fileSource, "sql", dbDriver)
+	defer schemaResponse.Body.Close()
+
+	schemaSql, err := io.ReadAll(schemaResponse.Body)
 	if err != nil {
-		errMessage := fmt.Sprintf("Migration runner error3 %s", err)
+		errMessage := fmt.Sprintf("Schema file open error %s", err)
 		panic(errMessage)
 	}
 
-	if err := migrater.Up(); err != nil {
-		errMessage := fmt.Sprintf("Migration runner error4 %s", err)
+	_, err = db.Exec(string(schemaSql))
+	if err != nil {
+		errMessage := fmt.Sprintf("Schema exec error %s", err)
 		panic(errMessage)
 	} else {
-		fmt.Println("Database migrations done")
+		fmt.Println("Done installing")
 	}
 
 	defer db.Close()
-	defer dbDriver.Close()
-	defer fileSource.Close()
-	defer migrater.Close()
 }

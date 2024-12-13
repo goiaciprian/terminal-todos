@@ -27,15 +27,18 @@ func init() {
 }
 
 func Count() (int64, error) {
-	defer db.Close()
 	ctx := context.Background()
 	return queries.CountTodos(ctx)
 }
 
-func GetAll() ([]database.Todo, error) {
+func CloseDb() {
+	defer db.Close()
+}
+
+func GetAll(qType, order string) ([]database.Todo, error) {
 	defer db.Close()
 	ctx := context.Background()
-	return queries.GetTodos(ctx)
+	return queries.GetTodos(ctx, qType, order)
 }
 
 func Create(title, description string) ([]database.Todo, error) {
