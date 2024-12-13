@@ -13,13 +13,13 @@ on:
       - prereleased
 
 jobs:
-  build:
+  build-from-tag:
+    if: "${{ github.event.inputs.tag == '' }}"
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
 
     - id: get_version
-      if: "${{ github.event.inputs.tag == '' }}"
       name: Get tag version
       uses: jannemattila/get-version-from-tag@v3
 
@@ -28,16 +28,9 @@ jobs:
       with:
           go-version-file: "go.mod"
 
-    - name: Build from release
-      if: "${{ github.event.inputs.tag == '' }}"
+    - name: Build
       run: |
         $VERSION="${{ steps.get_version.outputs.version }}"
-        go build -ldflags "-X terminal-todos/cmd/commands.Version=$VERSION" -o out/bin/cmd/todos_windows.exe ./cmd
-
-    - name: Build from dispatch
-      if: "${{ github.event.inputs.tag != '' }}"
-      run: |
-        $VERSION="${{ github.event.inputs.tag }}"
         go build -ldflags "-X terminal-todos/cmd/commands.Version=$VERSION" -o out/bin/cmd/todos_windows.exe ./cmd
 
     - name: Upload artifact todo windows
@@ -46,10 +39,34 @@ jobs:
         name: ${{ github.ref_name }}
         path: |
           out/bin/cmd/todos_windows.exe
+
+  build-from-dispatch:
+    if: "${{ github.event.inputs.tag != '' }}"
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+          go-version-file: "go.mod"
+
+    - name: Build
+      run: |
+        $VERSION="${{ github.event.inputs.tag }}"
+        go build -ldflags "-X terminal-todos/cmd/commands.Version=$VERSION" -o out/bin/cmd/todos_windows.exe ./cmd
+
+    - name: Upload artifact todo windows
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ github.event.inputs.tag }}
+        path: |
+          out/bin/cmd/todos_windows.exe
+    
   
-  upload:
+  upload-from-tag:
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [build-from-tag]
     steps:
     - name: Download todos artifacts
       uses: actions/download-artifact@v4
@@ -60,5 +77,20 @@ jobs:
       uses: jaywcjlove/github-action-upload-assets@v1.1.1
       with:
         tag: ${{ github.event.release.tag_name }} 
+        asset-path: '["./todos*"]'
+
+  upload-from-dispatch:
+    runs-on: ubuntu-latest
+    needs: [build-from-dispatch]
+    steps:
+    - name: Download todos artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ github.event.inputs.tag }}
+
+    - name: Upload windows
+      uses: jaywcjlove/github-action-upload-assets@v1.1.1
+      with:
+        tag: ${{ github.event.inputs.tag }} 
         asset-path: '["./todos*"]'
         
