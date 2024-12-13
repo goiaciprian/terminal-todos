@@ -88,40 +88,6 @@ func (q *Queries) DeleteTodo(ctx context.Context, id int64) (Todo, error) {
 	return i, err
 }
 
-const getTodos = `-- name: GetTodos :many
-select id, title, description, created_at, completed, completed_at from todos
-`
-
-func (q *Queries) GetTodos(ctx context.Context) ([]Todo, error) {
-	rows, err := q.db.QueryContext(ctx, getTodos)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Todo
-	for rows.Next() {
-		var i Todo
-		if err := rows.Scan(
-			&i.ID,
-			&i.Title,
-			&i.Description,
-			&i.CreatedAt,
-			&i.Completed,
-			&i.CompletedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getTodosById = `-- name: GetTodosById :one
 select id, title, description, created_at, completed, completed_at from todos where id = ?
 `
